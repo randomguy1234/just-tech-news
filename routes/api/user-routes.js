@@ -2,7 +2,7 @@ const router= require('express').Router();
 const { response } = require('express');
 const {User}= require('../../models');
 
-//GET /api/users
+//GET /api/users, get all users
 router.get('/', (req, res)=>
 {
     // Access our User model and run .findAll() method)
@@ -17,7 +17,7 @@ router.get('/', (req, res)=>
             });
 });
 
-//GET /api/users/1
+//GET /api/users/1, get 1 user
 router.get('/:id', (req, res)=>
 {
     User.findOne({
@@ -42,7 +42,7 @@ router.get('/:id', (req, res)=>
             });
 });
 
-//POST /api/users
+//POST /api/users, add new user
 router.post('/', (req, res)=>
 {
    // expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
@@ -59,7 +59,37 @@ router.post('/', (req, res)=>
         });
 });
 
-//PUT /api/users/1
+router.post('/login', (req, res)=>
+{
+    // Query operation
+    // expects {email: 'lernantino@gmail.com', password: 'password1234'}
+    User.findOne({
+        where: {
+          email:  req.body.email
+        }
+    })
+        .then(dbUserData =>
+        {
+            if (!dbUserData)
+            {
+                res.status(400).json({message: 'No user with that email address!'});
+                return;
+            }    
+            
+            //vertify user
+            const validPassword= dbUserData.checkPassword(req.body.password);
+            if (!validPassword)
+            {
+                res.status(400).json({message: 'Incorrect password!'});
+                return;
+            }
+
+            res.json({user: dbUserData, message: 'You are now logged in!'});
+        });
+        
+});
+
+//PUT /api/users/1, update 1 user
 router.put('/:id', (req, res)=>
 {
     // expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
@@ -87,7 +117,7 @@ router.put('/:id', (req, res)=>
             });    
 });
 
-//DELETE /api/users/1
+//DELETE /api/users/1, delete 1 user
 router.delete('/:id', (req, res)=>
 {
     User.destroy({
